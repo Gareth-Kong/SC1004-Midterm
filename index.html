@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Algebra Final Exam</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --accent-hover: #9965f4;
+            --option-bg: #2c2c2c;
+            --option-hover: #3d3d3d;
+            --correct-color: #03dac6;
+            --wrong-color: #cf6679;
+            --border-color: #333;
+        }
+
+        .light-theme {
+            --bg-color: #f5f5f5;
+            --container-bg: #ffffff;
+            --text-color: #212121;
+            --accent-color: #6200ea;
+            --accent-hover: #3700b3;
+            --option-bg: #e0e0e0;
+            --option-hover: #bdbdbd;
+            --correct-color: #4caf50;
+            --wrong-color: #f44336;
+            --border-color: #ccc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            margin: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-color);
+            color: var(--container-bg);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: var(--option-bg);
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        .quiz-content {
+            min-height: 300px;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .option {
+            background-color: var(--option-bg);
+            margin-bottom: 10px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background-color: var(--option-hover);
+        }
+
+        .option.selected {
+            border-color: var(--accent-color);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--option-bg);
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 20px 0;
+        }
+        
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <div class="app-container">
+        <div class="header">
+            <h2>Linear Algebra Exam</h2>
+            <div class="timer" id="timer">50:00</div>
+            <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">Light Mode</button>
+        </div>
+
+        <div id="quiz-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="quiz-content">
+                <div id="question-counter" style="margin-bottom: 10px; font-weight: bold; color: var(--accent-color);"></div>
+                <div class="question-text" id="question">Loading...</div>
+                <ul class="options-list" id="options"></ul>
+            </div>
+
+            <div class="navigation">
+                <button class="btn" id="prevBtn" onclick="prevQuestion()" disabled>Previous</button>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()">Next</button>
+                <button class="btn hide" id="submitBtn" onclick="submitQuiz()">Submit</button>
+            </div>
+        </div>
+
+        <div class="results" id="results-section">
+            <h2>Exam Complete</h2>
+            <p>Your Final Score:</p>
+            <div class="score-display" id="score">0 / 20</div>
+            <button class="btn" onclick="location.reload()">Retry Exam</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Find the reduced row echelon form of the augmented matrix [[1, 2, -4, 5], [5, -1, 0, 3], [-9, 4, -4, -1]].[cite: 1]",
+                options: [
+                    "[[1, 0, 0, 1], [0, 1, 0, 2], [0, 0, 1, 0]]",
+                    "[[1, 0, 0, 1], [0, 1, 0, -2], [0, 0, 1, -2]]",
+                    "[[1, 0, -4/11, 1], [0, 1, -20/11, 2], [0, 0, 0, 0]]",
+                    "[[1, 2, -4, 5], [0, 1, 20/11, 2], [0, 0, 1, -1]]",
+                    "The matrix cannot be reduced to row echelon form."
+                ],
+                answer: 2
+            },
+            {
+                question: "Given the 3x5 matrix A, find the value of t such that the solution set of Ax = 0 has 3 free variables.[cite: 1]",
+                options: ["t = 0", "t = 1/2", "t = 1", "t = 2", "t = -1"],
+                answer: 1
+            },
+            {
+                question: "Find the values of c and d so that A^2 = I, where A = [[1, 1/3], [c, d]].[cite: 2]",
+                options: ["c = 0, d = 1", "c = -3, d = 1", "c = 3, d = -1", "c = 0, d = -1", "c = 1, d = 0"],
+                answer: 3
+            },
+            {
+                question: "Suppose that a, b, c are distinct real numbers. Do the vectors [1, 1, 1]^T, [a, b, c]^T, and [a^2, b^2, c^2]^T form a linearly independent set?[cite: 2]",
+                options: [
+                    "Yes, always linearly independent.",
+                    "No, they are always linearly dependent.",
+                    "Only if a, b, c are positive.",
+                    "Only if a + b + c = 0.",
+                    "Only if a = b = c."
+                ],
+                answer: 0
+            },
+            {
+                question: "Find the standard matrix of the linear transformation T: R^2 -> R^2, which first reflects points through the line y = x, and then reflects points through the horizontal x-axis.[cite: 2]",
+                options: ["[[0, 1], [-1, 0]]", "[[0, -1], [1, 0]]", "[[1, 0], [0, -1]]", "[[-1, 0], [0, 1]]", "[[0, 1], [1, 0]]"],
+                answer: 0
+            },
+            {
+                question: "Given the matrix A = [[1, 2, 3, 1], [2, 3, 3, 10], [1, 1, 8, 9]], find the rank of A.[cite: 3]",
+                options: ["Rank = 1", "Rank = 2", "Rank = 3", "Rank = 4", "Rank = 0"],
+                answer: 2
+            },
+            {
+                question: "Find the lower-upper (LU) factorization for matrix A = [[1, 1, 2, 4], [2, 0, 1, 1], [4, 4, 2, 5]].[cite: 3]",
+                options: [
+                    "L = [[1,0,0],[2,1,0],[4,0,1]], U = [[1,1,2,4],[0,-2,-3,-7],[0,0,-6,-11]]",
+                    "L = [[1,0,0],[-2,1,0],[-4,0,1]], U = [[1,1,2,4],[0,2,3,7],[0,0,6,11]]",
+                    "L = [[1,0,0],[2,1,0],[0,4,1]], U = [[1,1,2,4],[0,1,1,1],[0,0,2,5]]",
+                    "L = [[1,0,0],[1,2,0],[2,4,1]], U = [[1,1,2,4],[0,-2,-3,-7],[0,0,-6,-11]]",
+                    "Factorization does not exist without row swaps."
+                ],
+                answer: 0
+            },
+            {
+                question: "Given a parallelepiped with one vertex at the origin and adjacent vertices at [1,1,1]^T, [2,1,1]^T, and [7,2,3]^T, calculate its initial volume.[cite: 3]",
+                options: ["1", "2", "3", "5", "7"],
+                answer: 0
+            },
+            {
+                question: "Find the volume of the parallelepiped after the transformation T defined by matrix A = [[2, 1, 1], [3, 0, 1], [0, 2, 2]] is applied to it.[cite: 4]",
+                options: ["1", "2", "4", "8", "16"],
+                answer: 2
+            },
+            {
+                question: "Given a linear transformation T over 2x2 matrices where T([[a11, a12], [a21, a22]]) = [[a11+a22, a12+a21], [a12+a21, a11+a22]], find the dimension of the transformation's kernel.[cite: 4]",
+                options: ["0", "1", "2", "3", "4"],
+                answer: 2
+            },
+            {
+                question: "Find the coefficients a, b and c in the linear system (ax+by-3z=-3, -2x-by+cz=-1, ax+3y-cz=-3) such that the solution is x=1, y=-1, z=2.[cite: 5]",
+                options: [
+                    "a = 2, b = 1, c = -1",
+                    "a = 1, b = -1, c = 2",
+                    "a = -2, b = 0, c = 1",
+                    "a = 3, b = -2, c = 1",
+                    "a = 0, b = 1, c = 1"
+                ],
+                answer: 0
+            },
+            {
+                question: "Consider the vectors a = [-3, 2, 1]^T, b = [2, 0, 1]^T and c = [-1, 2, 2]^T. Do these vectors span a line, a plane or R^3?[cite: 5]",
+                options: ["A line", "A plane", "R^3", "Only the origin", "None of the above"],
+                answer: 1
+            },
+            {
+                question: "Suppose the complete solution of Ax = b is given by x = [4, 0, 0]^T + c1[2, 1, 0]^T + c2[5, 0, 1]^T. Find the 3x3 reduced row echelon form R.[cite: 6]",
+                options: [
+                    "[[1, -2, -5], [0, 0, 0], [0, 0, 0]]",
+                    "[[1, 0, 0], [0, 1, 0], [0, 0, 1]]",
+                    "[[1, 2, 5], [0, 0, 0], [0, 0, 0]]",
+                    "[[1, 0, -5], [0, 1, -2], [0, 0, 0]]",
+                    "[[0, 1, 2], [0, 0, 5], [0, 0, 0]]"
+                ],
+                answer: 0
+            },
+            {
+                question: "Let T: R^2 -> R^3 be a linear transformation such that T([1, 1]^T) = [1, 2, 3]^T and T([1, 0]^T) = [0, 3, 1]^T. Writing v = [1, 2]^T as a linear combination, find T(v).[cite: 6]",
+                options: ["[2, 1, 5]^T", "[1, 5, 4]^T", "[0, 6, 2]^T", "[-1, 1, -1]^T", "[2, 4, 6]^T"],
+                answer: 0
+            },
+            {
+                question: "If Q is a matrix such that Q^T Q = I, find the absolute value of its determinant |Q|.[cite: 6]",
+                options: ["0", "1", "2", "-1", "Depends on the dimensions of Q"],
+                answer: 1
+            },
+            {
+                question: "For the matrix A = [[3, -2], [4, -2]], find the value of k if A^2 = kA - 2I.[cite: 7]",
+                options: ["k = -1", "k = 0", "k = 1", "k = 2", "k = -2"],
+                answer: 2
+            },
+            {
+                question: "Find the dimension of the null space N(B^T B) for the matrix B = [[1, 2, 1], [1, 1, 3], [0, 0, 0]].[cite: 7]",
+                options: ["0", "1", "2", "3", "4"],
+                answer: 1
+            },
+            {
+                question: "True or False: The column vectors of every 3x5 matrix A are linearly dependent.[cite: 8]",
+                options: [
+                    "True", 
+                    "False", 
+                    "Only if it contains a zero vector", 
+                    "Only if the rank is 5", 
+                    "Cannot be determined"
+                ],
+                answer: 0
+            },
+            {
+                question: "True or False: Let A be an nxn matrix. The linear system Ax = 4x has a unique solution if and only if A - 4I is an invertible matrix.[cite: 8]",
+                options: [
+                    "True",
+                    "False",
+                    "True, but only if A is the identity matrix",
+                    "False, it must be A + 4I",
+                    "Only if n > 4"
+                ],
+                answer: 0
+            },
+            {
+                question: "True or False: The set consisting of the x-axis, the y-axis, the line y = x, and the line y = -x forms a subspace of R^2.[cite: 10]",
+                options: [
+                    "True",
+                    "False",
+                    "Only in R^3",
+                    "Only if restricted to quadrant 1",
+                    "True, because it contains the origin"
+                ],
+                answer: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let timeRemaining = 50 * 60; // 50 minutes in seconds
+        let timerInterval;
+        const userAnswers = new Array(quizData.length).fill(null);
+
+        const questionEl = document.getElementById("question");
+        const optionsEl = document.getElementById("options");
+        const counterEl = document.getElementById("question-counter");
+        const progressBar = document.getElementById("progressBar");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const timerEl = document.getElementById("timer");
+
+        function initQuiz() {
+            startTimer();
+            loadQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let minutes = Math.floor(timeRemaining / 60);
+                let seconds = timeRemaining % 60;
+                
+                timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            const data = quizData[currentQuestion];
+            counterEl.textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+            questionEl.textContent = data.question;
+            optionsEl.innerHTML = "";
+
+            data.options.forEach((optionText, index) => {
+                const li = document.createElement("li");
+                li.classList.add("option");
+                li.textContent = optionText;
+                
+                if (userAnswers[currentQuestion] === index) {
+                    li.classList.add("selected");
+                }
+
+                li.onclick = () => selectOption(index, li);
+                optionsEl.appendChild(li);
+            });
+
+            // Update Progress Bar
+            const progressPercent = ((currentQuestion) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Handle Buttons
+            prevBtn.disabled = currentQuestion === 0;
+            
+            if (currentQuestion === quizData.length - 1) {
+                nextBtn.classList.add("hide");
+                submitBtn.classList.remove("hide");
+            } else {
+                nextBtn.classList.remove("hide");
+                submitBtn.classList.add("hide");
+            }
+        }
+
+        function selectOption(index, element) {
+            userAnswers[currentQuestion] = index;
+            
+            // Remove selection from siblings
+            Array.from(optionsEl.children).forEach(child => {
+                child.classList.remove("selected");
+            });
+            
+            element.classList.add("selected");
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function submitQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById("quiz-section").style.display = "none";
+            document.getElementById("results-section").style.display = "block";
+            
+            progressBar.style.width = `100%`;
+
+            let score = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === quizData[idx].answer) {
+                    score++;
+                }
+            });
+
+            document.getElementById("score").textContent = `${score} / ${quizData.length}`;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById("themeBtn");
+            if (body.classList.contains("dark-theme")) {
+                body.classList.replace("dark-theme", "light-theme");
+                btn.textContent = "Dark Mode";
+            } else {
+                body.classList.replace("light-theme", "dark-theme");
+                btn.textContent = "Light Mode";
+            }
+        }
+
+        // Start App
+        initQuiz();
+    </script>
+</body>
+</html>
